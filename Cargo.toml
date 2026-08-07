@@ -31,7 +31,11 @@ harness = false
 
 [dependencies]
 capacity_builder = "0.5.0"
-deno_ast = { version = "0.53.0", features = ["view"] }
+# zts fork: local checkout of the ZesTTY deno_ast fork, a sibling of this repo.
+# It is repointed at the swc fork (swc_rustify@zts) that carries the zts grammar
+# and turns the zts syntax flag on. See that repo for why these are path deps
+# rather than [patch.crates-io].
+deno_ast = { path = "../deno_ast", features = ["view"] }
 dprint-core = { version = "0.68.2", features = ["formatting"] }
 dprint-core-macros = "0.1.0"
 percent-encoding = "2.3.1"
