@@ -1,5 +1,5 @@
 ~~ enumDeclaration.memberSpacing: blankLine ~~
-== should format with blankLines ==
+== should format with blankLines (skip) zts replaces TS enum — see tests/readme.md ==
 declare enum Test {
     member1,
 

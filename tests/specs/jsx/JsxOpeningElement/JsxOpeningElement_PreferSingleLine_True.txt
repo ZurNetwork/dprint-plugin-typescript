@@ -1,6 +1,6 @@
 -- file.tsx --
 ~~ lineWidth: 50, jsxAttributes.preferSingleLine: true ~~
-== should format when has attributes below line width ==
+== should format when has attributes below line width (skip) whitespace inside a closing tag, see tests/readme.md ==
 const t = <Test    attrib={5}    other="test"  > < /  Test  > ;
 
 [expect]

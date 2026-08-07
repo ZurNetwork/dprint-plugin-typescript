@@ -1,4 +1,4 @@
-== should format ==
+== should format (skip) zts replaces TS enum — see tests/readme.md ==
 enum Test
 {
 }
@@ -7,7 +7,7 @@ enum Test
 enum Test {
 }
 
-== should format when const ==
+== should format when const (skip) zts replaces TS enum — see tests/readme.md ==
 const  enum Test
 {
 }
@@ -16,7 +16,7 @@ const  enum Test
 const enum Test {
 }
 
-== should format with members ==
+== should format with members (skip) zts replaces TS enum — see tests/readme.md ==
 declare enum Test
 {
     member1    ,
@@ -29,7 +29,7 @@ declare enum Test {
     member2,
 }
 
-== should format with only comments ==
+== should format with only comments (skip) zts replaces TS enum — see tests/readme.md ==
 enum Test {
     // testing
     /* test */
@@ -45,7 +45,7 @@ enum Test {
 enum Test2 { // comment
 }
 
-== should format when has comments ==
+== should format when has comments (skip) zts replaces TS enum — see tests/readme.md ==
 enum Test {
     // testing
     member,

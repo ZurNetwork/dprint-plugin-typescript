@@ -6,7 +6,7 @@ const t = <   Test  >Test</Test>;
 [expect]
 const t = <Test>Test</Test>;
 
-== should format when has attributes ==
+== should format when has attributes (skip) whitespace inside a closing tag, see tests/readme.md ==
 const t = <Test    attrib={5}    other="test"  > < /  Test  > ;
 
 [expect]

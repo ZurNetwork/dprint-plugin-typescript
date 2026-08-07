@@ -1,5 +1,5 @@
 ~~ lineWidth: 30 ~~
-== should format ==
+== should format (skip) zts replaces TS enum — see tests/readme.md ==
 enum Test {
     member,
     member2    =    5,
@@ -15,7 +15,7 @@ enum Test {
     "member4" = "str",
 }
 
-== should format with initializer on next line if it goes over ==
+== should format with initializer on next line if it goes over (skip) zts replaces TS enum — see tests/readme.md ==
 enum Test {
     memberThatIsLong = 52364363463463,
     member2 = "some" + "test" + "withLotsOfThese"

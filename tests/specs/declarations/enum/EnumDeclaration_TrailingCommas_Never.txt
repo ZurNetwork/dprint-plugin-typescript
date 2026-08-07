@@ -1,5 +1,5 @@
 ~~ enumDeclaration.trailingCommas: never ~~
-== should not format with trailing commas ==
+== should not format with trailing commas (skip) zts replaces TS enum — see tests/readme.md ==
 declare enum Test
 {
     member1    ,

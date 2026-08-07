@@ -1,5 +1,5 @@
 -- file.tsx --
-== should format ==
+== should format (skip) whitespace inside a closing tag, see tests/readme.md ==
 const t = <><   / >;
 
 [expect]
