@@ -25,6 +25,8 @@ impl SyncPluginHandler<Configuration> for TypeScriptPluginHandler {
       diagnostics: config.diagnostics,
       file_matching: FileMatchingInfo {
         file_extensions: vec![
+          // zts fork: the language's own extension, formatted as TypeScript.
+          String::from("zts"),
           String::from("ts"),
           String::from("tsx"),
           String::from("js"),

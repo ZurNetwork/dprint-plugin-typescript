@@ -34,9 +34,12 @@ fn parse_inner(file_path: &Path, file_extension: Option<&str>, text: Arc<str>) -
 
 fn parse_inner_no_diagnostic_check(file_path: &Path, file_extension: Option<&str>, text: Arc<str>) -> Result<ParsedSource> {
   let media_type = if let Some(file_extension) = file_extension {
-    deno_ast::MediaType::from_path(&file_path.with_extension(file_extension))
+    media_type_for_extension(file_path, file_extension)
   } else {
-    deno_ast::MediaType::from_path(file_path)
+    match get_lowercase_extension(file_path) {
+      Some(ext) => media_type_for_extension(file_path, &ext),
+      None => deno_ast::MediaType::from_path(file_path),
+    }
   };
 
   let mut syntax = deno_ast::get_syntax(media_type);
@@ -53,6 +56,25 @@ fn parse_inner_no_diagnostic_check(file_path: &Path, file_extension: Option<&str
     text,
   })
   .map_err(Into::into)
+}
+
+/// zts fork: resolve an extension to a media type, teaching it about `.zts`.
+///
+/// `.zts` is this language's own extension and deno_media_type — an external
+/// crate — has never heard of it, so `MediaType::from_path` answers `Unknown`,
+/// which resolves to a JavaScript syntax. A `.zts` file would then be parsed
+/// without TypeScript at all: every type annotation a syntax error, and none of
+/// the zts grammar reachable (it hangs off `TsSyntax`).
+///
+/// It maps to plain TypeScript, deliberately not Tsx. `.zts` is non-JSX in v1
+/// (recorded decision): `<T>` in a .zts file is a type assertion, as it is in a
+/// `.ts` file. Note this also keeps `.zts` out of the JSX retry in
+/// `parse_swc_ast` above, which is the same decision expressed twice.
+fn media_type_for_extension(file_path: &Path, extension: &str) -> deno_ast::MediaType {
+  if extension.eq_ignore_ascii_case("zts") {
+    return deno_ast::MediaType::TypeScript;
+  }
+  deno_ast::MediaType::from_path(&file_path.with_extension(extension))
 }
 
 fn path_to_specifier(path: &Path) -> Result<ModuleSpecifier> {
