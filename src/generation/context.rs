@@ -1,5 +1,5 @@
 use deno_ast::swc::common::comments::Comment;
-use deno_ast::swc::parser::token::TokenAndSpan;
+use deno_ast::swc::parser::unstable::TokenAndSpan;
 use deno_ast::view::*;
 use deno_ast::MediaType;
 use deno_ast::SourcePos;

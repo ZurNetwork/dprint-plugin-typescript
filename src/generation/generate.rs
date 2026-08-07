@@ -1,8 +1,7 @@
 use deno_ast::swc::common::comments::Comment;
 use deno_ast::swc::common::comments::CommentKind;
-use deno_ast::swc::parser::token::BinOpToken;
-use deno_ast::swc::parser::token::Token;
-use deno_ast::swc::parser::token::TokenAndSpan;
+use deno_ast::swc::parser::unstable::Token;
+use deno_ast::swc::parser::unstable::TokenAndSpan;
 use deno_ast::view::*;
 use deno_ast::CommentsIterator;
 use deno_ast::MediaType;
@@ -721,7 +720,10 @@ fn gen_class_prop_common<'a, 'b>(node: GenClassPropCommon<'a, 'b>, context: &mut
     || matches!(
       node.original.next_token_fast(context.program),
       Some(TokenAndSpan {
-        token: Token::LBracket | Token::BinOp(BinOpToken::Mul),
+        // zts fork: the fast token enum is flat — `*` is `Token::Asterisk`
+        // rather than `Token::BinOp(BinOpToken::Mul)`, and `BinOpToken` no
+        // longer exists as a separate enum.
+        token: Token::LBracket | Token::Asterisk,
         ..
       })
     );
@@ -9259,7 +9261,7 @@ fn gen_jsx_children<'a>(opts: GenJsxChildrenOptions<'a>, context: &mut Context<'
 
     let past_token = context.token_finder.get_previous_token(&current);
     if let Some(TokenAndSpan {
-      token: deno_ast::swc::parser::token::Token::JSXText { .. },
+      token: deno_ast::swc::parser::unstable::Token::JSXText { .. },
       span,
       had_line_break,
     }) = past_token

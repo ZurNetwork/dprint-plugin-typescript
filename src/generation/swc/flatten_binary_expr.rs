@@ -1,8 +1,7 @@
 use super::super::Context;
-use deno_ast::swc::parser::token::TokenAndSpan;
+use deno_ast::swc::parser::unstable::TokenAndSpan;
 use deno_ast::view::*;
 use deno_ast::SourceRanged;
-use deno_ast::SourceRangedForSpanned;
 
 use super::extensions::*;
 use crate::configuration::*;

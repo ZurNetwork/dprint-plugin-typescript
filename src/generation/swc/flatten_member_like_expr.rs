@@ -1,9 +1,8 @@
-use deno_ast::swc::parser::token::Token;
-use deno_ast::swc::parser::token::TokenAndSpan;
+use deno_ast::swc::parser::unstable::Token;
+use deno_ast::swc::parser::unstable::TokenAndSpan;
 use deno_ast::view::*;
 use deno_ast::SourcePos;
 use deno_ast::SourceRanged;
-use deno_ast::SourceRangedForSpanned;
 
 use crate::generation::generate_types::CallOrOptCallExpr;
 
@@ -98,7 +97,10 @@ fn push_descendant_nodes<'a>(node: Node<'a>, nodes: &mut Vec<MemberLikeExprItem<
       debug_assert_eq!(tokens.len(), 3);
       for token in tokens {
         match &token.token {
-          Token::Word(_) => {
+          // zts fork: the fast token enum has no `Token::Word(_)` wrapper —
+          // keywords and identifiers are variants in their own right, and
+          // `Token::is_word()` is the predicate that spans them all.
+          t if t.is_word() => {
             nodes.push(MemberLikeExprItem::Token(token));
           }
           Token::Dot => {}
