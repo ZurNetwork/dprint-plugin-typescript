@@ -184,14 +184,24 @@ mod tests {
   #[test]
   fn should_error_on_unary_expression_dot() {
     // issue #391
+    //
+    // zts fork, RE-BASELINED — not caused by anything this fork does. Between
+    // the swc_ecma_parser this plugin was published against (27.0.7) and the one
+    // the swc fork is based on (43.0.0), "Expected ident" for a trailing dot
+    // moved from spanning `value` (1:2) to pointing at the dot itself (1:8).
+    // That makes it agree with `should_error_on_unary_expression_dot_semicolon`
+    // directly below, which has always expected 1:8 and still passes unchanged —
+    // so upstream converged the two cases rather than regressing one.
+    //
+    // Upstream expectation was: "...:1:2", "  +value.", "   ~~~~~".
     run_fatal_diagnostic_test(
       "./test.ts",
       "+value.",
       concat!(
         // comment to keep this multi-line
-        "Expected ident at file:///test.ts:1:2\n\n",
+        "Expected ident at file:///test.ts:1:8\n\n",
         "  +value.\n",
-        "   ~~~~~"
+        "         ~"
       ),
     );
   }
