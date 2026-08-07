@@ -29,6 +29,13 @@ name = "specs"
 path = "tests/spec_test.rs"
 harness = false
 
+# zts fork: idempotence over the zts spec corpus. A normal harness test, unlike
+# the spec runner above, because it asserts one property rather than collecting
+# files.
+[[test]]
+name = "zts_idempotence"
+path = "tests/zts_idempotence.rs"
+
 [dependencies]
 capacity_builder = "0.5.0"
 # zts fork: local checkout of the ZesTTY deno_ast fork, a sibling of this repo.
