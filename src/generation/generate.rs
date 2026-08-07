@@ -346,6 +346,40 @@ fn gen_node_with_inner_gen<'a>(node: Node<'a>, context: &mut Context<'a>, inner_
       Node::TsTypeQuery(node) => gen_type_query(node, context),
       Node::TsTypeRef(node) => gen_type_reference(node, context),
       Node::TsUnionType(node) => gen_union_type(node, context),
+      /* zts — print rules land here (ZesTTY Phase 7 item 7) */
+      //
+      // These are the AST nodes the swc fork adds for the zts language. The
+      // parser produces them and dprint-swc-ext now has view nodes for them, so
+      // this dispatch is the last place that does not know about them, and it is
+      // exactly where the print rules go — one `gen_*` per node, donor-node
+      // discipline, mirroring the arms above.
+      //
+      // Until then, formatting a file that actually contains zts syntax fails
+      // loudly on purpose. Falling through to "print the raw text" (what the arm
+      // below does for nodes that should never be matched) would emit a
+      // half-formatted file and look like it worked.
+      //
+      // The arms are listed EXPLICITLY rather than as a `_ =>` wildcard so that
+      // adding a node to the zts grammar is a compile error here instead of a
+      // runtime surprise — the same reason every arm above is spelled out.
+      Node::MatchArm(_)
+      | Node::MatchExpr(_)
+      | Node::MatchLitPat(_)
+      | Node::MatchVariantPat(_)
+      | Node::MatchWildcardPat(_)
+      | Node::ZtsEnumDecl(_)
+      | Node::ZtsEnumField(_)
+      | Node::ZtsEnumVariant(_)
+      | Node::ZtsExprBlock(_)
+      | Node::ZtsIfExpr(_)
+      | Node::ZtsImplDecl(_)
+      | Node::ZtsImplMethod(_)
+      | Node::ZtsNewtypeDecl(_)
+      | Node::ZtsNonEmptyArrayType(_)
+      | Node::ZtsTryExpr(_)
+      | Node::ZtsUnionDecl(_) => {
+        panic!("zts-fmt: no print rule for {} yet (ZesTTY Phase 7 item 7).", node.kind());
+      }
       /* These should never be matched. Return its text if so */
       Node::Class(_) | Node::Function(_) | Node::Invalid(_) | Node::WithStmt(_) | Node::TsModuleBlock(_) => {
         if cfg!(debug_assertions) {
