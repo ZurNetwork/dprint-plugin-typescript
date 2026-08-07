@@ -45,7 +45,7 @@ fn main() {
   try_fmt("zts union", "union Level = 'a' | 'b';\n");
   try_fmt("zts expression if", "const  y = if (a) { 1 } else { 2 };\n");
   try_fmt("zts not", "const  z = not  a;\n");
-  try_fmt("zts impl block", "impl Display for Status {\n  fn fmt(self): string { return 'x'; }\n}\n");
+  try_fmt("zts impl block", "impl Display for Status {\n  fmt(self): string { return 'x'; }\n}\n");
   try_fmt("zts try postfix", "function f(): Result<number, string> { const q = foo()?; return Ok(q); }\n");
   try_fmt("zts non-empty array", "declare const xs: number[+];\n");
 }

@@ -4,6 +4,7 @@ use deno_ast::view::Node;
 use deno_ast::view::Program;
 use deno_ast::RootNode;
 use deno_ast::SourceRanged;
+use deno_ast::SourceRangedForSpanned;
 
 /** Gets if the node contains a line comment or multi-line block comment */
 pub fn contains_line_or_multiline_comment<'a>(node: Node<'a>, program: Program<'a>) -> bool {

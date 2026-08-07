@@ -1,6 +1,7 @@
 use deno_ast::view::*;
 use deno_ast::SourceRange;
 use deno_ast::SourceRanged;
+use deno_ast::SourceRangedForSpanned;
 
 use crate::generation::context::Context;
 

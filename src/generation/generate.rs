@@ -374,8 +374,10 @@ fn gen_node_with_inner_gen<'a>(node: Node<'a>, context: &mut Context<'a>, inner_
       | Node::ZtsIfExpr(_)
       | Node::ZtsImplDecl(_)
       | Node::ZtsImplMethod(_)
+      | Node::ZtsImplTraitRef(_)
       | Node::ZtsNewtypeDecl(_)
       | Node::ZtsNonEmptyArrayType(_)
+      | Node::ZtsNotExpr(_)
       | Node::ZtsTryExpr(_)
       | Node::ZtsUnionDecl(_) => {
         panic!("zts-fmt: no print rule for {} yet (ZesTTY Phase 7 item 7).", node.kind());

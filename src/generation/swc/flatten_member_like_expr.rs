@@ -3,6 +3,7 @@ use deno_ast::swc::parser::unstable::TokenAndSpan;
 use deno_ast::view::*;
 use deno_ast::SourcePos;
 use deno_ast::SourceRanged;
+use deno_ast::SourceRangedForSpanned;
 
 use crate::generation::generate_types::CallOrOptCallExpr;
 
