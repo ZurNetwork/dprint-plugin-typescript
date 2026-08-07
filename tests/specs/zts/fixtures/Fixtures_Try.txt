@@ -1,0 +1,132 @@
+-- file.zts --
+== should format try_basic.zts ==
+import { type Result, Ok, Err } from "@zestty/core";
+
+function divide(a: number, b: number): Result<number, string> {
+  return if (b === 0) { Err("division by zero") } else { Ok(a / b) };
+}
+
+// All three sanctioned v1 forms: const-init, bare statement, return.
+function halveTwice(n: number): Result<number, string> {
+  const once = divide(n, 2)?;
+  divide(once, 2)?;
+  const twice = divide(once, 2)?;
+  return Ok(twice);
+}
+
+declare function nested(n: number): Result<Result<number, string>, string>;
+
+function chain(n: number): Result<number, string> {
+  // `return e?;` — the unwrapped Ok value must satisfy the return type.
+  return nested(n)?;
+}
+
+console.log(halveTwice(8), chain(4));
+
+[expect]
+import { Err, Ok, type Result } from "@zestty/core";
+
+function divide(a: number, b: number): Result<number, string> {
+    return if (b === 0) { Err("division by zero") } else { Ok(a / b) };
+}
+
+// All three sanctioned v1 forms: const-init, bare statement, return.
+function halveTwice(n: number): Result<number, string> {
+    const once = divide(n, 2)?;
+    divide(once, 2)?;
+    const twice = divide(once, 2)?;
+    return Ok(twice);
+}
+
+declare function nested(n: number): Result<Result<number, string>, string>;
+
+function chain(n: number): Result<number, string> {
+    // `return e?;` — the unwrapped Ok value must satisfy the return type.
+    return nested(n)?;
+}
+
+console.log(halveTwice(8), chain(4));
+
+== should format try_single_stmt_slots.zts ==
+// `?` in single-statement slots (no surrounding statement list): each must
+// expand inside a block, keeping the early return's meaning.
+type R = { kind: "Ok"; value: number } | { kind: "Err"; error: string };
+
+declare function g(): R;
+declare const xs: R[];
+
+function slots(c: boolean): R | number {
+  if (c) g()?;
+  else g()?;
+
+  while (c) g()?;
+
+  for (let i = 0; i < 2; i++) g()?;
+
+  for (const x of xs) x?;
+
+  outer: g()?;
+
+  // `return e?;` in a slot: unwraps to the Ok value.
+  if (c) return g()?;
+
+  return g();
+}
+
+console.log(slots(true));
+
+[expect]
+// `?` in single-statement slots (no surrounding statement list): each must
+// expand inside a block, keeping the early return's meaning.
+type R = { kind: "Ok"; value: number } | { kind: "Err"; error: string };
+
+declare function g(): R;
+declare const xs: R[];
+
+function slots(c: boolean): R | number {
+    if (c) g()?;
+    else g()?;
+
+    while (c) g()?;
+
+    for (let i = 0; i < 2; i++) g()?;
+
+    for (const x of xs) x?;
+
+    outer: g()?;
+
+    // `return e?;` in a slot: unwraps to the Ok value.
+    if (c) return g()?;
+
+    return g();
+}
+
+console.log(slots(true));
+
+== should format try_object_accessors.zts ==
+// Security verification V3: object-literal accessors get real function
+// context — an ANNOTATED getter may use `?` like any other function.
+type R = { kind: "Ok"; value: number } | { kind: "Err"; error: string };
+
+declare function g(): R;
+
+export const o = {
+  get port(): R {
+    const p = g()?;
+    return { kind: "Ok", value: p + 1 };
+  },
+};
+
+[expect]
+// Security verification V3: object-literal accessors get real function
+// context — an ANNOTATED getter may use `?` like any other function.
+type R = { kind: "Ok"; value: number } | { kind: "Err"; error: string };
+
+declare function g(): R;
+
+export const o = {
+    get port(): R {
+        const p = g()?;
+        return { kind: "Ok", value: p + 1 };
+    },
+};

@@ -1,0 +1,53 @@
+-- file.zts --
+== should format ==
+union DeleteOutcome='soft'|'hard'|'unknown';
+
+[expect]
+union DeleteOutcome = "soft" | "hard" | "unknown";
+
+== should drop a leading bar on the single line form ==
+union Level = | 'info' | 'warn';
+
+[expect]
+union Level = "info" | "warn";
+
+== should format when exported ==
+export union Level = 'info' | 'warn' | 'error';
+
+[expect]
+export union Level = "info" | "warn" | "error";
+
+== should keep a multi-line union multi-line ==
+union Level =
+  | 'info'
+  | 'warn'
+  | 'error';
+
+[expect]
+union Level =
+    | "info"
+    | "warn"
+    | "error";
+
+== should break a long union on to multiple lines ==
+union HttpMethod = 'get' | 'put' | 'post' | 'patch' | 'delete' | 'options' | 'head' | 'trace' | 'connect' | 'query' | 'purge';
+
+[expect]
+union HttpMethod =
+    | "get"
+    | "put"
+    | "post"
+    | "patch"
+    | "delete"
+    | "options"
+    | "head"
+    | "trace"
+    | "connect"
+    | "query"
+    | "purge";
+
+== should format a single member ==
+union Only = 'one';
+
+[expect]
+union Only = "one";

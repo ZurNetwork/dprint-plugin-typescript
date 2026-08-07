@@ -1,0 +1,102 @@
+-- file.zts --
+== should format if_expr_basic.zts ==
+declare const b: number;
+
+const a = if (b === 0) { 3 } else { 4 };
+
+const graded = if (b > 90) { "A" } else if (b > 80) { "B" } else { "C" };
+
+console.log(a, graded);
+
+[expect]
+declare const b: number;
+
+const a = if (b === 0) { 3 } else { 4 };
+
+const graded = if (b > 90) { "A" } else if (b > 80) { "B" } else { "C" };
+
+console.log(a, graded);
+
+== should format if_expr_multi_stmt.zts ==
+declare const n: number;
+declare function expensive(x: number): number;
+
+const result = if (n > 0) {
+  const cached = expensive(n);
+  cached * 2
+} else {
+  0
+};
+
+const chained: string = if (n > 100) {
+  const s = `${n}`;
+  s + "!"
+} else if (n > 10) {
+  "mid"
+} else {
+  const neg = -n;
+  `${neg}`
+};
+
+console.log(result, chained);
+
+[expect]
+declare const n: number;
+declare function expensive(x: number): number;
+
+const result = if (n > 0) {
+    const cached = expensive(n);
+    cached * 2
+} else {
+    0
+};
+
+const chained: string = if (n > 100) {
+    const s = `${n}`;
+    s + "!"
+} else if (n > 10) {
+    "mid"
+} else {
+    const neg = -n;
+    `${neg}`
+};
+
+console.log(result, chained);
+
+== should format if_expr_precedence.zts ==
+declare const c: boolean;
+
+export const a1 = if (c) { 1 } else { 2 } + 1;
+export const a2 = -if (c) { 1 } else { 2 };
+export const a3 = if (c) { [1] } else { [2] }[0];
+export const a4 = if (c) { 2 } else { 3 } ** 2;
+export const a5 = !if (c) { true } else { false };
+export const a6 = if (c) { 1 } else { 2 } * if (c) { 3 } else { 4 };
+
+[expect]
+declare const c: boolean;
+
+export const a1 = if (c) { 1 } else { 2 } + 1;
+export const a2 = -if (c) { 1 } else { 2 };
+export const a3 = if (c) { [1] } else { [2] }[0];
+export const a4 = if (c) { 2 } else { 3 } ** 2;
+export const a5 = !if (c) { true } else { false };
+export const a6 = if (c) { 1 } else { 2 } * if (c) { 3 } else { 4 };
+
+== should format if_expr_await_simple.zts ==
+declare function f(): Promise<number>;
+
+async function go(flag: boolean): Promise<number> {
+  return if (flag) { await f() } else { 0 };
+}
+
+void go(true);
+
+[expect]
+declare function f(): Promise<number>;
+
+async function go(flag: boolean): Promise<number> {
+    return if (flag) { await f() } else { 0 };
+}
+
+void go(true);

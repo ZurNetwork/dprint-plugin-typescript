@@ -1,0 +1,110 @@
+-- file.zts --
+== should format ==
+const a=if(b===0){3}else{4};
+
+[expect]
+const a = if (b === 0) { 3 } else { 4 };
+
+== should keep a short if expression on one line ==
+const a = if (b === 0) { 3 } else { 4 };
+
+[expect]
+const a = if (b === 0) { 3 } else { 4 };
+
+== should format an else-if chain ==
+const g=if(b>90){'A'}else if(b>80){'B'}else{'C'};
+
+[expect]
+const g = if (b > 90) { "A" } else if (b > 80) { "B" } else { "C" };
+
+== should format a multi-statement block ==
+const r = if (n > 0) {
+  const cached = expensive(n);
+  cached * 2
+} else {
+  0
+};
+
+[expect]
+const r = if (n > 0) {
+    const cached = expensive(n);
+    cached * 2
+} else {
+    0
+};
+
+== should keep a multi-line block multi-line ==
+const a = if (b) {
+  3
+} else {
+  4
+};
+
+[expect]
+const a = if (b) {
+    3
+} else {
+    4
+};
+
+== should break a long if expression ==
+const a = if (someCondition && anotherCondition) { aVeryLongFunctionCall(withArguments) } else { anotherVeryLongFunctionCall(more) };
+
+[expect]
+const a = if (someCondition && anotherCondition) { aVeryLongFunctionCall(withArguments) } else {
+    anotherVeryLongFunctionCall(more)
+};
+
+== should format an if expression as a match arm body ==
+const a = match (s) {
+  Circle { radius } => if (radius > 10) { 'big' } else { 'small' },
+};
+
+[expect]
+const a = match (s) {
+    Circle { radius } => if (radius > 10) { "big" } else { "small" },
+};
+
+== should format a nested if expression inside a block ==
+const a = if (x) {
+  const t = if (y) { 1 } else { 2 };
+  t
+} else {
+  3
+};
+
+[expect]
+const a = if (x) {
+    const t = if (y) { 1 } else { 2 };
+    t
+} else {
+    3
+};
+
+== should format an awaited test ==
+async function f() {
+  return if (await ready()) { 1 } else { 2 };
+}
+
+[expect]
+async function f() {
+    return if (await ready()) { 1 } else { 2 };
+}
+
+== should format a match as a block tail ==
+const a = if (x) {
+  match (s) {
+    A { v } => v,
+  }
+} else {
+  0
+};
+
+[expect]
+const a = if (x) {
+    match (s) {
+        A { v } => v,
+    }
+} else {
+    0
+};

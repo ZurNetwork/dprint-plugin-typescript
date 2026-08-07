@@ -12,6 +12,39 @@ const u = 2;
 
 See [here](https://github.com/dprint/dprint/tree/main/crates/development#test-specs) for more details.
 
+## zts fork: the zts spec suite
+
+`tests/specs/zts/` covers the constructs the zts language adds. Same format and
+same harness as everything else; the files carry a `-- file.zts --` header so
+they exercise the `.zts` extension path too.
+
+  enum/          declarations, payload fields, the `mut` opt-out
+  match/         the expression, its arms, and every pattern form
+  expressions/   expression `if`, expression blocks, `not`, postfix `?`
+  declarations/  newtype, union, impl (incl. traits v2), constrict
+  types/         `T[+]`
+  comments/      comment attachment around and inside every construct
+  fixtures/      whole files, seeded from the zts compiler's own .zts fixtures
+
+The `fixtures/` group is the interesting one: those inputs are real programs
+someone wrote by hand, so they catch the layout decisions that only show up when
+constructs nest — a match inside an impl method inside an enum's trait, an `if`
+expression as a match arm body, a `?` inside a destructuring initializer.
+
+### Idempotence
+
+`tests/zts_idempotence.rs` asserts `fmt(fmt(x)) == fmt(x)` over the whole zts
+spec corpus directly.
+
+The harness already formats twice, but it checks the second pass against the
+spec's own `[expect]` block, which makes idempotence a consequence of the
+expectations being right rather than a property in its own right. The dedicated
+test starts from both the input and the expectation of every spec, at two indent
+widths, at a narrow line width, and with semicolons off — the last of which is
+what caught both round-trip bugs the print rules originally had (see
+`zts_requires_semi_colon` in generate.rs: a `?` and an expression-block tail both
+make a semicolon load-bearing rather than stylistic).
+
 ## zts fork: specs marked `(skip)`
 
 ### `tests/specs/declarations/enum/**` — TypeScript `enum` (17 specs)

@@ -1,0 +1,80 @@
+-- file.zts --
+== should format ==
+enum Shape{Circle{radius:number},Square{side:number}}
+
+[expect]
+enum Shape {
+    Circle { radius: number },
+    Square { side: number },
+}
+
+== should format a variant with no fields ==
+enum Status {
+  Active { since: number },
+  Inactive {},
+}
+
+[expect]
+enum Status {
+    Active { since: number },
+    Inactive {},
+}
+
+== should break a variant on to multiple lines when it does not fit ==
+enum Event { Resize { widthInPixels: number, heightInPixels: number, devicePixelRatio: number, timestampMilliseconds: number, isTrusted: boolean } }
+
+[expect]
+enum Event {
+    Resize {
+        widthInPixels: number,
+        heightInPixels: number,
+        devicePixelRatio: number,
+        timestampMilliseconds: number,
+        isTrusted: boolean,
+    },
+}
+
+== should keep a multi-line variant multi-line ==
+enum Shape {
+  Circle {
+    radius: number,
+  },
+}
+
+[expect]
+enum Shape {
+    Circle {
+        radius: number,
+    },
+}
+
+== should maintain blank lines between variants ==
+enum Shape {
+  Circle { r: number },
+
+  Square { s: number },
+}
+
+[expect]
+enum Shape {
+    Circle { r: number },
+
+    Square { s: number },
+}
+
+== should format when exported ==
+export enum Shape { Circle { r: number } }
+
+[expect]
+export enum Shape {
+    Circle { r: number },
+}
+
+== should format generic field types ==
+enum Wrapper { Many { items: Array<Map<string, number>> }, One { item: string } }
+
+[expect]
+enum Wrapper {
+    Many { items: Array<Map<string, number>> },
+    One { item: string },
+}

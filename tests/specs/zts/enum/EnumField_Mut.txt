@@ -1,0 +1,32 @@
+-- file.zts --
+== should format a mut field ==
+enum Counter{Cell{mut count:number,label:string}}
+
+[expect]
+enum Counter {
+    Cell { mut count: number, label: string },
+}
+
+== should format a field named mut ==
+enum Weird { A { mut: number } }
+
+[expect]
+enum Weird {
+    A { mut: number },
+}
+
+== should format a mut field named mut ==
+enum Weird { A { mut mut: number } }
+
+[expect]
+enum Weird {
+    A { mut mut: number },
+}
+
+== should format every field mut ==
+enum Cell { Both { mut a: number, mut b: string } }
+
+[expect]
+enum Cell {
+    Both { mut a: number, mut b: string },
+}

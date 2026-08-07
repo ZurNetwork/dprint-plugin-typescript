@@ -1,0 +1,109 @@
+-- file.zts --
+== should format ==
+declare const shape: Shape;
+const area=match(shape){Circle{radius}=>radius,Square{side}=>side}
+
+[expect]
+declare const shape: Shape;
+const area = match (shape) {
+    Circle { radius } => radius,
+    Square { side } => side,
+};
+
+== should keep the brace on the line of the discriminant ==
+const a = match (s) {
+  A { x } => x,
+};
+
+[expect]
+const a = match (s) {
+    A { x } => x,
+};
+
+== should format a single arm ==
+const a = match (s) { A { x } => x };
+
+[expect]
+const a = match (s) {
+    A { x } => x,
+};
+
+== should break a long arm body ==
+const a = match (s) {
+  Circle { radius } => someVeryLongFunctionName(radius) + anotherVeryLongFunctionName(radius) + aThirdOne(radius),
+};
+
+[expect]
+const a = match (s) {
+    Circle { radius } => someVeryLongFunctionName(radius) + anotherVeryLongFunctionName(radius) + aThirdOne(radius),
+};
+
+== should format a block arm body ==
+const a = match (s) {
+  Circle { radius } => {
+    const r2 = radius * radius;
+    3.14 * r2
+  },
+  Square { side } => side ** 2,
+};
+
+[expect]
+const a = match (s) {
+    Circle { radius } => {
+        const r2 = radius * radius;
+        3.14 * r2
+    },
+    Square { side } => side ** 2,
+};
+
+== should format a nested match ==
+const a = match (s) {
+  Outer { inner } => match (inner) {
+    Inner { v } => v,
+  },
+};
+
+[expect]
+const a = match (s) {
+    Outer { inner } => match (inner) {
+        Inner { v } => v,
+    },
+};
+
+== should maintain blank lines between arms ==
+const a = match (s) {
+  A { x } => x,
+
+  B { y } => y,
+};
+
+[expect]
+const a = match (s) {
+    A { x } => x,
+
+    B { y } => y,
+};
+
+== should format an awaited discriminant ==
+const a = match (await load()) {
+  Ok { value } => value,
+};
+
+[expect]
+const a = match (await load()) {
+    Ok { value } => value,
+};
+
+== should format a match in a return ==
+function f(): number {
+  return match (s) {
+    A { x } => x,
+  };
+}
+
+[expect]
+function f(): number {
+    return match (s) {
+        A { x } => x,
+    };
+}

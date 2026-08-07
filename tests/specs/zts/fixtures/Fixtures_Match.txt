@@ -1,0 +1,328 @@
+-- file.zts --
+== should format match_basic.zts ==
+type Shape =
+  | { kind: "Circle"; radius: number }
+  | { kind: "Square"; side: number };
+
+const PI = 3.141592653589793;
+
+declare const shape: Shape;
+
+const area = match (shape) {
+  Circle { radius } => PI * radius ** 2,
+  Square { side } => side ** 2,
+};
+
+console.log(area);
+
+[expect]
+type Shape =
+    | { kind: "Circle"; radius: number }
+    | { kind: "Square"; side: number };
+
+const PI = 3.141592653589793;
+
+declare const shape: Shape;
+
+const area = match (shape) {
+    Circle { radius } => PI * radius ** 2,
+    Square { side } => side ** 2,
+};
+
+console.log(area);
+
+== should format match_literal.zts ==
+type Level = "debug" | "info" | "warn" | "error";
+type Code = -1 | 0 | 1;
+
+declare const level: Level;
+declare const code: Code;
+declare const flag: boolean;
+
+// Exhaustive literal match: no wildcard needed, keystone still fires on a
+// missing literal.
+const rank = match (level) {
+  "debug" => 0,
+  "info" => 1,
+  "warn" => 2,
+  "error" => 3,
+};
+
+// Numbers, including a negative literal.
+const sign = match (code) {
+  -1 => "neg",
+  0 => "zero",
+  1 => "pos",
+};
+
+// Booleans, block arm body, and a wildcard tail.
+const desc = match (flag) {
+  true => {
+    const base = "yes";
+    base.toUpperCase()
+  },
+  _ => "NO",
+};
+
+console.log(rank, sign, desc);
+
+[expect]
+type Level = "debug" | "info" | "warn" | "error";
+type Code = -1 | 0 | 1;
+
+declare const level: Level;
+declare const code: Code;
+declare const flag: boolean;
+
+// Exhaustive literal match: no wildcard needed, keystone still fires on a
+// missing literal.
+const rank = match (level) {
+    "debug" => 0,
+    "info" => 1,
+    "warn" => 2,
+    "error" => 3,
+};
+
+// Numbers, including a negative literal.
+const sign = match (code) {
+    -1 => "neg",
+    0 => "zero",
+    1 => "pos",
+};
+
+// Booleans, block arm body, and a wildcard tail.
+const desc = match (flag) {
+    true => {
+        const base = "yes";
+        base.toUpperCase()
+    },
+    _ => "NO",
+};
+
+console.log(rank, sign, desc);
+
+== should format match_wildcard.zts ==
+type AppEvent =
+  | { kind: "Click"; x: number; y: number }
+  | { kind: "Key"; code: string }
+  | { kind: "Scroll"; delta: number }
+  | { kind: "Resize"; w: number; h: number };
+
+declare const ev: AppEvent;
+
+// `_` replaces the exhaustiveness keystone: unlisted variants fall through.
+const label = match (ev) {
+  Click { x, y } => `click ${x},${y}`,
+  Key { code } => `key ${code}`,
+  _ => "other",
+};
+
+console.log(label);
+
+[expect]
+type AppEvent =
+    | { kind: "Click"; x: number; y: number }
+    | { kind: "Key"; code: string }
+    | { kind: "Scroll"; delta: number }
+    | { kind: "Resize"; w: number; h: number };
+
+declare const ev: AppEvent;
+
+// `_` replaces the exhaustiveness keystone: unlisted variants fall through.
+const label = match (ev) {
+    Click { x, y } => `click ${x},${y}`,
+    Key { code } => `key ${code}`,
+    _ => "other",
+};
+
+console.log(label);
+
+== should format match_nested.zts ==
+type Inner =
+  | { kind: "A"; x: number }
+  | { kind: "B"; y: number };
+
+type Outer =
+  | { kind: "Left"; inner: Inner }
+  | { kind: "Right"; label: string };
+
+declare const o: Outer;
+
+const n = match (o) {
+  Left { inner } => match (inner) {
+    A { x } => x,
+    B { y } => y * 2,
+  },
+  Right { label } => label.length,
+};
+
+[expect]
+type Inner =
+    | { kind: "A"; x: number }
+    | { kind: "B"; y: number };
+
+type Outer =
+    | { kind: "Left"; inner: Inner }
+    | { kind: "Right"; label: string };
+
+declare const o: Outer;
+
+const n = match (o) {
+    Left { inner } => match (inner) {
+        A { x } => x,
+        B { y } => y * 2,
+    },
+    Right { label } => label.length,
+};
+
+== should format match_block_arm_bodies.zts ==
+type Shape =
+  | { kind: "Circle"; radius: number }
+  | { kind: "Square"; side: number };
+
+declare const shape: Shape;
+
+const area = match (shape) {
+  Circle { radius } => {
+    const r2 = radius * radius;
+    3.14159 * r2
+  },
+  Square { side } => side ** 2,
+};
+
+const label = match (shape) {
+  Circle { radius } => if (radius > 10) { "big circle" } else { "small circle" },
+  Square { side } => {
+    const desc = if (side > 10) { "big" } else { "small" };
+    `${desc} square`
+  },
+};
+
+console.log(area, label);
+
+[expect]
+type Shape =
+    | { kind: "Circle"; radius: number }
+    | { kind: "Square"; side: number };
+
+declare const shape: Shape;
+
+const area = match (shape) {
+    Circle { radius } => {
+        const r2 = radius * radius;
+        3.14159 * r2
+    },
+    Square { side } => side ** 2,
+};
+
+const label = match (shape) {
+    Circle { radius } => if (radius > 10) { "big circle" } else { "small circle" },
+    Square { side } => {
+        const desc = if (side > 10) { "big" } else { "small" };
+        `${desc} square`
+    },
+};
+
+console.log(area, label);
+
+== should format match_bigint.zts ==
+type Flag = -1n | 0n | 1n;
+
+declare const flag: Flag;
+
+const label = match (flag) {
+  -1n => "neg",
+  0n => "zero",
+  1n => "pos",
+};
+
+const nullable = match (null as string | null) {
+  null => "none",
+  _ => "some",
+};
+
+console.log(label, nullable);
+
+[expect]
+type Flag = -1n | 0n | 1n;
+
+declare const flag: Flag;
+
+const label = match (flag) {
+    -1n => "neg",
+    0n => "zero",
+    1n => "pos",
+};
+
+const nullable = match (null as string | null) {
+    null => "none",
+    _ => "some",
+};
+
+console.log(label, nullable);
+
+== should format match_asi_regression.zts ==
+declare function match(n: number): number;
+
+match(1)
+{
+  console.log(2);
+}
+
+match(3)
+{}
+
+[expect]
+declare function match(n: number): number;
+
+match(1);
+{
+    console.log(2);
+}
+
+match(3);
+{}
+
+== should format match_directives_imports.zts ==
+"use client";
+"use strict";
+
+import type { Whatever } from "./elsewhere";
+
+type T = { kind: "K"; v: number } | { kind: "L"; w: number };
+declare const t: T;
+
+const first = match (t) {
+  K { v } => v,
+  L { w } => w,
+};
+
+const second = match (t) {
+  K { v } => v + 1,
+  L { w } => w - 1,
+};
+
+export { first, second };
+export type { Whatever };
+
+[expect]
+"use client";
+"use strict";
+
+import type { Whatever } from "./elsewhere";
+
+type T = { kind: "K"; v: number } | { kind: "L"; w: number };
+declare const t: T;
+
+const first = match (t) {
+    K { v } => v,
+    L { w } => w,
+};
+
+const second = match (t) {
+    K { v } => v + 1,
+    L { w } => w - 1,
+};
+
+export { first, second };
+export type { Whatever };

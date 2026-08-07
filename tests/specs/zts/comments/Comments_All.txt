@@ -1,0 +1,236 @@
+-- file.zts --
+== should keep a comment above an enum ==
+// the shapes
+enum Shape {
+  Circle { r: number },
+}
+
+[expect]
+// the shapes
+enum Shape {
+    Circle { r: number },
+}
+
+== should keep comments on enum variants ==
+enum Shape {
+  // a round one
+  Circle { r: number },
+  // a square one
+  Square { s: number },
+}
+
+[expect]
+enum Shape {
+    // a round one
+    Circle { r: number },
+    // a square one
+    Square { s: number },
+}
+
+== should keep a comment on an enum field ==
+enum Shape {
+  Circle {
+    // in pixels
+    r: number,
+  },
+}
+
+[expect]
+enum Shape {
+    Circle {
+        // in pixels
+        r: number,
+    },
+}
+
+== should keep a trailing comment on a variant ==
+enum Shape {
+  Circle { r: number }, // round
+  Square { s: number }, // square
+}
+
+[expect]
+enum Shape {
+    Circle { r: number }, // round
+    Square { s: number }, // square
+}
+
+== should keep a comment inside an empty variant ==
+enum Shape {
+  Nothing {
+    // no payload yet
+  },
+}
+
+[expect]
+enum Shape {
+    Nothing {
+        // no payload yet
+    },
+}
+
+== should keep a comment above a match ==
+// pick the area
+const a = match (s) {
+  Circle { r } => r,
+};
+
+[expect]
+// pick the area
+const a = match (s) {
+    Circle { r } => r,
+};
+
+== should keep comments on match arms ==
+const a = match (s) {
+  // the round case
+  Circle { r } => r,
+  // everything else
+  _ => 0,
+};
+
+[expect]
+const a = match (s) {
+    // the round case
+    Circle { r } => r,
+    // everything else
+    _ => 0,
+};
+
+== should keep a trailing comment on a match arm ==
+const a = match (s) {
+  Circle { r } => r, // round
+  _ => 0, // fallback
+};
+
+[expect]
+const a = match (s) {
+    Circle { r } => r, // round
+    _ => 0, // fallback
+};
+
+== should keep a comment between an arm pattern and its body ==
+const a = match (s) {
+  Circle { r } => // round
+    r,
+};
+
+[expect]
+const a = match (s) {
+    Circle { r } => // round
+        r,
+};
+
+== should keep a comment inside an expression block ==
+const a = if (b) {
+  // compute it
+  const t = 1;
+  t
+} else {
+  0
+};
+
+[expect]
+const a = if (b) {
+    // compute it
+    const t = 1;
+    t
+} else {
+    0
+};
+
+== should keep a comment above an if expression branch ==
+const a = if (b) {
+  1
+} else {
+  // the fallback
+  0
+};
+
+[expect]
+const a = if (b) {
+    1
+} else {
+    // the fallback
+    0
+};
+
+== should keep a comment above a newtype ==
+// an account, not an order
+newtype AccountId = string;
+
+[expect]
+// an account, not an order
+newtype AccountId = string;
+
+== should keep a comment above a union member ==
+union Level =
+  // the quiet one
+  | 'info'
+  | 'warn';
+
+[expect]
+union Level =
+    // the quiet one
+    | "info"
+    | "warn";
+
+== should keep comments in an impl block ==
+impl Display for Shape {
+  // how it reads
+  fmt(self): string {
+    return 'x';
+  }
+}
+
+[expect]
+impl Display for Shape {
+    // how it reads
+    fmt(self): string {
+        return "x";
+    }
+}
+
+== should keep a comment above a constrict ==
+// these must stay distinct
+constrict UserId != OrderId;
+
+[expect]
+// these must stay distinct
+constrict UserId != OrderId;
+
+== should keep a block comment between a not and its operand ==
+const a = not /* really */ ready;
+
+[expect]
+const a = not /* really */ ready;
+
+== should keep a comment on a try expression ==
+function f(): Result<number, string> {
+  // may fail
+  const v = g()?;
+  return Ok(v);
+}
+
+[expect]
+function f(): Result<number, string> {
+    // may fail
+    const v = g()?;
+    return Ok(v);
+}
+
+== should keep a jsdoc comment above an enum ==
+/**
+ * A shape.
+ */
+enum Shape {
+  Circle { r: number },
+}
+
+[expect]
+/**
+ * A shape.
+ */
+enum Shape {
+    Circle { r: number },
+}

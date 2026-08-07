@@ -1,0 +1,47 @@
+-- file.zts --
+== should format equality ==
+constrict UserId==OrderId;
+
+[expect]
+constrict UserId == OrderId;
+
+== should format inequality ==
+constrict UserId!=string;
+
+[expect]
+constrict UserId != string;
+
+== should format extends ==
+constrict UserId extends string;
+
+[expect]
+constrict UserId extends string;
+
+== should format an object type on the right ==
+constrict Config extends {host:string};
+
+[expect]
+constrict Config extends { host: string };
+
+== should format a keyof claim ==
+constrict keyof Config=='host'|'port';
+
+[expect]
+constrict keyof Config == "host" | "port";
+
+== should break a long claim ==
+constrict SomeVeryLongTypeNameHere<WithArguments, AndMoreArguments> == AnotherVeryLongTypeNameHere<WithArguments, AndMore>;
+
+[expect]
+constrict SomeVeryLongTypeNameHere<WithArguments, AndMoreArguments> == AnotherVeryLongTypeNameHere<
+    WithArguments,
+    AndMore
+>;
+
+== should keep constrict usable as an identifier ==
+const constrict = 1;
+console.log(constrict);
+
+[expect]
+const constrict = 1;
+console.log(constrict);

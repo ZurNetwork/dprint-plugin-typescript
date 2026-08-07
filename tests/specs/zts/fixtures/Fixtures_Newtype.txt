@@ -1,0 +1,102 @@
+-- file.zts --
+== should format newtype_basic.zts ==
+newtype AccountId = string;
+newtype Meters = number;
+
+const id = AccountId("acc_123");
+const dist = Meters(42);
+
+function describe(a: AccountId, d: Meters): string {
+  return `${a}: ${d}`;
+}
+
+console.log(describe(id, dist));
+
+[expect]
+newtype AccountId = string;
+newtype Meters = number;
+
+const id = AccountId("acc_123");
+const dist = Meters(42);
+
+function describe(a: AccountId, d: Meters): string {
+    return `${a}: ${d}`;
+}
+
+console.log(describe(id, dist));
+
+== should format newtype_export.zts ==
+export newtype UserId = string;
+
+// Forward reference: newtypes hoist like enums, so use-before-decl works.
+const admin = OrgId("org_1");
+export newtype OrgId = string;
+
+export function link(u: UserId, o: OrgId): string {
+  return `${u}@${o}`;
+}
+
+console.log(link(UserId("u_1"), admin));
+
+[expect]
+export newtype UserId = string;
+
+// Forward reference: newtypes hoist like enums, so use-before-decl works.
+const admin = OrgId("org_1");
+export newtype OrgId = string;
+
+export function link(u: UserId, o: OrgId): string {
+    return `${u}@${o}`;
+}
+
+console.log(link(UserId("u_1"), admin));
+
+== should format newtype_union.zts ==
+// Compiles in zts; tsc must reject the raw-literal call — the brand must
+// cover the WHOLE union underlying type, not just its last member.
+newtype Mode = "read" | "write";
+
+function setMode(m: Mode): string {
+  return m;
+}
+
+setMode("read");
+setMode(Mode("read"));
+
+[expect]
+// Compiles in zts; tsc must reject the raw-literal call — the brand must
+// cover the WHOLE union underlying type, not just its last member.
+newtype Mode = "read" | "write";
+
+function setMode(m: Mode): string {
+    return m;
+}
+
+setMode("read");
+setMode(Mode("read"));
+
+== should format newtype_typeof.zts ==
+// The factory parameter must not capture user names: `typeof value` here
+// refers to the module const, not the generated parameter.
+export const value: number = 42;
+
+newtype N = typeof value;
+
+export const n = N(7);
+
+// Function and union underlying types need the load-bearing parens.
+newtype Handler = (x: number) => void;
+export const h = Handler((x: number) => {});
+
+[expect]
+// The factory parameter must not capture user names: `typeof value` here
+// refers to the module const, not the generated parameter.
+export const value: number = 42;
+
+newtype N = typeof value;
+
+export const n = N(7);
+
+// Function and union underlying types need the load-bearing parens.
+newtype Handler = (x: number) => void;
+export const h = Handler((x: number) => {});

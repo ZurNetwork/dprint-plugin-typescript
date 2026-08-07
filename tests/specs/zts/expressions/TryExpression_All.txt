@@ -1,0 +1,55 @@
+-- file.zts --
+== should format a const initializer ==
+function f():Result<number,string>{const once=divide(n,2)?;return Ok(once);}
+
+[expect]
+function f(): Result<number, string> {
+    const once = divide(n, 2)?;
+    return Ok(once);
+}
+
+== should format a bare statement ==
+function f(): Result<number, string> {
+  divide(n, 2)?;
+  return Ok(1);
+}
+
+[expect]
+function f(): Result<number, string> {
+    divide(n, 2)?;
+    return Ok(1);
+}
+
+== should format a return argument ==
+function f(): Result<number, string> {
+  return nested(n)?;
+}
+
+[expect]
+function f(): Result<number, string> {
+    return nested(n)?;
+}
+
+== should format a member call operand ==
+function f(): Result<number, string> {
+  const v = obj.method(arg).other()?;
+  return Ok(v);
+}
+
+[expect]
+function f(): Result<number, string> {
+    const v = obj.method(arg).other()?;
+    return Ok(v);
+}
+
+== should format a destructuring initializer ==
+function f(): Result<number, string> {
+  const { a } = g()?;
+  return Ok(a);
+}
+
+[expect]
+function f(): Result<number, string> {
+    const { a } = g()?;
+    return Ok(a);
+}

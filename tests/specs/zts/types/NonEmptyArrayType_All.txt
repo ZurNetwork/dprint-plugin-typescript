@@ -1,0 +1,36 @@
+-- file.zts --
+== should format ==
+declare const xs:number[+];
+
+[expect]
+declare const xs: number[+];
+
+== should format in a type alias ==
+type Names = string[+];
+
+[expect]
+type Names = string[+];
+
+== should format a nested array element ==
+type Grid = number[][+];
+
+[expect]
+type Grid = number[][+];
+
+== should format a non-empty array of non-empty arrays ==
+type Grid = number[+][+];
+
+[expect]
+type Grid = number[+][+];
+
+== should format a union element type ==
+type Mixed = (string | number)[+];
+
+[expect]
+type Mixed = (string | number)[+];
+
+== should format in a parameter and return type ==
+declare function head(xs: number[+]): number;
+
+[expect]
+declare function head(xs: number[+]): number;

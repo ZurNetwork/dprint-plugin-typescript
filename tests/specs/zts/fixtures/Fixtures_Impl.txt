@@ -1,0 +1,236 @@
+-- file.zts --
+== should format impl_basic.zts ==
+// Phase 6 traits: the trait is a plain TS interface; the impl merges into
+// the enum's factory const; calls are plain TS on both ends.
+export interface Display<Self> {
+  fmt(self: Self): string;
+}
+
+export enum Shape {
+  Circle { r: number },
+  Rect { w: number, h: number },
+}
+
+impl Display for Shape {
+  fmt(self): string {
+    return match (self) {
+      Circle { r } => `circle r=${r}`,
+      Rect { w, h } => `rect ${w}x${h}`,
+    };
+  }
+}
+
+declare const s: Shape;
+
+// Direct call — static-method style.
+export const label: string = Shape.fmt(s);
+
+// Generic over the trait: the dictionary is an ordinary parameter, and
+// the factory namespace itself satisfies Display<Shape> structurally.
+export function describe<T>(x: T, impl: Display<T>): string {
+  return `<${impl.fmt(x)}>`;
+}
+export const d: string = describe(s, Shape);
+
+[expect]
+// Phase 6 traits: the trait is a plain TS interface; the impl merges into
+// the enum's factory const; calls are plain TS on both ends.
+export interface Display<Self> {
+    fmt(self: Self): string;
+}
+
+export enum Shape {
+    Circle { r: number },
+    Rect { w: number, h: number },
+}
+
+impl Display for Shape {
+    fmt(self): string {
+        return match (self) {
+            Circle { r } => `circle r=${r}`,
+            Rect { w, h } => `rect ${w}x${h}`,
+        };
+    }
+}
+
+declare const s: Shape;
+
+// Direct call — static-method style.
+export const label: string = Shape.fmt(s);
+
+// Generic over the trait: the dictionary is an ordinary parameter, and
+// the factory namespace itself satisfies Display<Shape> structurally.
+export function describe<T>(x: T, impl: Display<T>): string {
+    return `<${impl.fmt(x)}>`;
+}
+export const d: string = describe(s, Shape);
+
+== should format impl_multi_trait.zts ==
+// Two impls for one enum: methods merge into ONE factory const, the
+// satisfies clause intersects both traits, impl order is preserved.
+interface Area<Self> {
+  area(self: Self): number;
+}
+interface Scaled<Self> {
+  scaled(self: Self, k: number): number;
+}
+
+enum Box {
+  Cube { side: number },
+}
+
+impl Area for Box {
+  area(self): number {
+    return match (self) {
+      Cube { side } => side * side,
+    };
+  }
+}
+
+impl Scaled for Box {
+  scaled(self, k: number): number {
+    return Box.area(self) * k;
+  }
+}
+
+declare const b: Box;
+export const n: number = Box.scaled(b, 2);
+
+[expect]
+// Two impls for one enum: methods merge into ONE factory const, the
+// satisfies clause intersects both traits, impl order is preserved.
+interface Area<Self> {
+    area(self: Self): number;
+}
+interface Scaled<Self> {
+    scaled(self: Self, k: number): number;
+}
+
+enum Box {
+    Cube { side: number },
+}
+
+impl Area for Box {
+    area(self): number {
+        return match (self) {
+            Cube { side } => side * side,
+        };
+    }
+}
+
+impl Scaled for Box {
+    scaled(self, k: number): number {
+        return Box.area(self) * k;
+    }
+}
+
+declare const b: Box;
+export const n: number = Box.scaled(b, 2);
+
+== should format impl_assoc_from.zts ==
+// Traits v2: associated function (no self) + trait type-args. The
+// dictionary story is unchanged — the factory namespace satisfies the
+// instantiated trait.
+interface From<Self, T> {
+  from(value: T): Self;
+}
+
+enum Status {
+  Active { since: number },
+  Inactive {},
+}
+
+impl From<string> for Status {
+  from(value: string): Status {
+    return value === "active" ? Status.Active(0) : Status.Inactive();
+  }
+}
+
+export const s: Status = Status.from("active");
+
+export function convert<S, T>(raw: T, impl: From<S, T>): S {
+  return impl.from(raw);
+}
+export const t: Status = convert("inactive", Status);
+
+[expect]
+// Traits v2: associated function (no self) + trait type-args. The
+// dictionary story is unchanged — the factory namespace satisfies the
+// instantiated trait.
+interface From<Self, T> {
+    from(value: T): Self;
+}
+
+enum Status {
+    Active { since: number },
+    Inactive {},
+}
+
+impl From<string> for Status {
+    from(value: string): Status {
+        return value === "active" ? Status.Active(0) : Status.Inactive();
+    }
+}
+
+export const s: Status = Status.from("active");
+
+export function convert<S, T>(raw: T, impl: From<S, T>): S {
+    return impl.from(raw);
+}
+export const t: Status = convert("inactive", Status);
+
+== should format impl_multi_from.zts ==
+// Traits v2: comma-header multi-instantiation — ONE union-typed body,
+// each listed trait a separate satisfies obligation (TS overload
+// semantics via intersection).
+interface From<Self, T> {
+  from(value: T): Self;
+}
+
+enum Id {
+  Str { s: string },
+  Num { n: number },
+}
+
+impl From<string>, From<number> for Id {
+  from(value: string | number): Id {
+    return typeof value === "string" ? Id.Str(value) : Id.Num(value);
+  }
+}
+
+export const a: Id = Id.from("abc");
+export const b: Id = Id.from(42);
+
+export function convert<S, T>(raw: T, impl: From<S, T>): S {
+  return impl.from(raw);
+}
+export const c: Id = convert("x", Id);
+export const d: Id = convert(7, Id);
+
+[expect]
+// Traits v2: comma-header multi-instantiation — ONE union-typed body,
+// each listed trait a separate satisfies obligation (TS overload
+// semantics via intersection).
+interface From<Self, T> {
+    from(value: T): Self;
+}
+
+enum Id {
+    Str { s: string },
+    Num { n: number },
+}
+
+impl From<string>, From<number> for Id {
+    from(value: string | number): Id {
+        return typeof value === "string" ? Id.Str(value) : Id.Num(value);
+    }
+}
+
+export const a: Id = Id.from("abc");
+export const b: Id = Id.from(42);
+
+export function convert<S, T>(raw: T, impl: From<S, T>): S {
+    return impl.from(raw);
+}
+export const c: Id = convert("x", Id);
+export const d: Id = convert(7, Id);

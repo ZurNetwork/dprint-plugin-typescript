@@ -1,0 +1,60 @@
+-- file.zts --
+== should format ==
+const a=not ready;
+
+[expect]
+const a = not ready;
+
+== should format a double negation ==
+const b = not not ready;
+
+[expect]
+const b = not not ready;
+
+== should keep parens around a binary operand ==
+const e = not (items.length > 0);
+
+[expect]
+const e = not (items.length > 0);
+
+== should drop needless parens around an identifier ==
+const f = not (ready);
+
+[expect]
+const f = not ready;
+
+== should format inside an if expression test ==
+const c = if (not ready) { 'wait' } else { 'go' };
+
+[expect]
+const c = if (not ready) { "wait" } else { "go" };
+
+== should format as a match arm body ==
+const d = match (s) {
+  K { ok } => not ok,
+};
+
+[expect]
+const d = match (s) {
+    K { ok } => not ok,
+};
+
+== should format a member operand ==
+const g = not obj.flag;
+
+[expect]
+const g = not obj.flag;
+
+== should format a call operand ==
+const h = not isReady();
+
+[expect]
+const h = not isReady();
+
+== should keep not usable as a property name ==
+const obj = { not: 1 };
+const g = obj.not;
+
+[expect]
+const obj = { not: 1 };
+const g = obj.not;

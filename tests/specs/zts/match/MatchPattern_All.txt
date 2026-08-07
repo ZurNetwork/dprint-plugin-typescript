@@ -1,0 +1,114 @@
+-- file.zts --
+== should format a variant pattern with bindings ==
+const a = match (s) { Circle{radius}=>radius };
+
+[expect]
+const a = match (s) {
+    Circle { radius } => radius,
+};
+
+== should format a variant pattern that binds nothing ==
+const a = match (s) { Circle{}=>1,Square{}=>2 };
+
+[expect]
+const a = match (s) {
+    Circle {} => 1,
+    Square {} => 2,
+};
+
+== should format a renamed binding ==
+const a = match (s) { Circle{radius:r}=>r };
+
+[expect]
+const a = match (s) {
+    Circle { radius: r } => r,
+};
+
+== should format a binding with a default ==
+const a = match (s) { Circle { radius = 1 } => radius };
+
+[expect]
+const a = match (s) {
+    Circle { radius = 1 } => radius,
+};
+
+== should format a rest binding ==
+const a = match (s) { Circle { radius, ...rest } => radius };
+
+[expect]
+const a = match (s) {
+    Circle { radius, ...rest } => radius,
+};
+
+== should format string literal patterns ==
+const a = match (l) { 'debug'=>0,'info'=>1 };
+
+[expect]
+const a = match (l) {
+    "debug" => 0,
+    "info" => 1,
+};
+
+== should format number literal patterns ==
+const a = match (c) { 0=>'zero',1=>'one' };
+
+[expect]
+const a = match (c) {
+    0 => "zero",
+    1 => "one",
+};
+
+== should format a negative number literal pattern ==
+const a = match (c) { -1=>'neg',0=>'zero' };
+
+[expect]
+const a = match (c) {
+    -1 => "neg",
+    0 => "zero",
+};
+
+== should format a boolean literal pattern ==
+const a = match (b) { true=>1,false=>0 };
+
+[expect]
+const a = match (b) {
+    true => 1,
+    false => 0,
+};
+
+== should format a bigint literal pattern ==
+const a = match (b) { 1n=>'one',2n=>'two' };
+
+[expect]
+const a = match (b) {
+    1n => "one",
+    2n => "two",
+};
+
+== should format a negative bigint literal pattern ==
+const a = match (b) { -1n=>'neg',0n=>'zero' };
+
+[expect]
+const a = match (b) {
+    -1n => "neg",
+    0n => "zero",
+};
+
+== should format a wildcard pattern ==
+const a = match (e) { Click{x}=>x,_=>0 };
+
+[expect]
+const a = match (e) {
+    Click { x } => x,
+    _ => 0,
+};
+
+== should break a long variant binding ==
+const a = match (e) {
+  Resize { widthInPixels, heightInPixels, devicePixelRatio, timestampMilliseconds, isTrusted } => widthInPixels,
+};
+
+[expect]
+const a = match (e) {
+    Resize { widthInPixels, heightInPixels, devicePixelRatio, timestampMilliseconds, isTrusted } => widthInPixels,
+};

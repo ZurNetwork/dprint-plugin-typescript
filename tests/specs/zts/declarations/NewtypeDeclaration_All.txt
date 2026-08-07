@@ -1,0 +1,32 @@
+-- file.zts --
+== should format ==
+newtype AccountId=string;
+
+[expect]
+newtype AccountId = string;
+
+== should format when exported ==
+export newtype Meters = number;
+
+[expect]
+export newtype Meters = number;
+
+== should format a union underlying type ==
+newtype Key = string|number;
+
+[expect]
+newtype Key = string | number;
+
+== should format a typeof underlying type ==
+declare const base: { a: number };
+newtype Derived = typeof base;
+
+[expect]
+declare const base: { a: number };
+newtype Derived = typeof base;
+
+== should break a long underlying type ==
+newtype Handler = (firstArgument: string, secondArgument: number, thirdArgument: boolean, fourth: object) => void;
+
+[expect]
+newtype Handler = (firstArgument: string, secondArgument: number, thirdArgument: boolean, fourth: object) => void;

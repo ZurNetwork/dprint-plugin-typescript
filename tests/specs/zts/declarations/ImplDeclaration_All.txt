@@ -1,0 +1,128 @@
+-- file.zts --
+== should format ==
+impl Display for Shape{fmt(self):string{return 'x';}}
+
+[expect]
+impl Display for Shape {
+    fmt(self): string {
+        return "x";
+    }
+}
+
+== should format multiple methods ==
+impl Shape for Shape {
+  area(self): number {
+    return 1;
+  }
+  scaled(self, k: number): number {
+    return k;
+  }
+}
+
+[expect]
+impl Shape for Shape {
+    area(self): number {
+        return 1;
+    }
+    scaled(self, k: number): number {
+        return k;
+    }
+}
+
+== should maintain blank lines between methods ==
+impl A for B {
+  one(self): number {
+    return 1;
+  }
+
+  two(self): number {
+    return 2;
+  }
+}
+
+[expect]
+impl A for B {
+    one(self): number {
+        return 1;
+    }
+
+    two(self): number {
+        return 2;
+    }
+}
+
+== should format a trait with type arguments ==
+impl From<string> for Status{from(value:string):Status{return Status.Active(0);}}
+
+[expect]
+impl From<string> for Status {
+    from(value: string): Status {
+        return Status.Active(0);
+    }
+}
+
+== should format a comma header ==
+impl From<string>,From<number> for Id{from(value:string|number):Id{return Id.Str('a');}}
+
+[expect]
+impl From<string>, From<number> for Id {
+    from(value: string | number): Id {
+        return Id.Str("a");
+    }
+}
+
+== should format an associated function with no self ==
+impl From<string> for Status {
+  from(value: string): Status {
+    return Status.Active(0);
+  }
+}
+
+[expect]
+impl From<string> for Status {
+    from(value: string): Status {
+        return Status.Active(0);
+    }
+}
+
+== should format a method with type parameters ==
+impl Mapper for Box{map<T>(self,f:(v:number)=>T):T{return f(1);}}
+
+[expect]
+impl Mapper for Box {
+    map<T>(self, f: (v: number) => T): T {
+        return f(1);
+    }
+}
+
+== should format an async method ==
+impl Loader for Box {
+  load(self): Promise<number> {
+    return Promise.resolve(1);
+  }
+}
+
+[expect]
+impl Loader for Box {
+    load(self): Promise<number> {
+        return Promise.resolve(1);
+    }
+}
+
+== should format a match body inside a method ==
+impl Display for Shape {
+  fmt(self): string {
+    return match (self) {
+      Circle { r } => `circle r=${r}`,
+    };
+  }
+}
+
+[expect]
+impl Display for Shape {
+    fmt(self): string {
+        return match (self) {
+            Circle { r } => `circle r=${r}`,
+        };
+    }
+}
