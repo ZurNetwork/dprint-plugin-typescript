@@ -37,15 +37,20 @@ fn main() {
     }
     return;
   }
-  try_fmt("vanilla ts", "const   t=5;\nfunction  foo( a:number,b:string ):void{ if(a){console.log(b)} }\n");
-  try_fmt("ts enum (zts hard error)", "enum E { A, B }\n");
-  try_fmt("zts enum-with-data", "enum Shape {\n  Circle { r: number },\n  Square { s: number },\n}\n");
-  try_fmt("zts match expr", "declare const shape: Shape;\nconst area = match (shape) {\n  Circle { radius } => radius,\n};\n");
-  try_fmt("zts newtype", "newtype UserId = string;\n");
-  try_fmt("zts union", "union Level = 'a' | 'b';\n");
-  try_fmt("zts expression if", "const  y = if (a) { 1 } else { 2 };\n");
-  try_fmt("zts not", "const  z = not  a;\n");
-  try_fmt("zts impl block", "impl Display for Status {\n  fmt(self): string { return 'x'; }\n}\n");
-  try_fmt("zts try postfix", "function f(): Result<number, string> { const q = foo()?; return Ok(q); }\n");
-  try_fmt("zts non-empty array", "declare const xs: number[+];\n");
+  try_fmt("enum", "enum Shape {\n  Circle { r: number },\n  Square { side: number },\n}\n");
+  try_fmt("enum mut/empty", "enum Counter {\n  Cell { mut count: number, label: string },\n  Empty {},\n}\n");
+  try_fmt("match", "declare const shape: Shape;\nconst area = match (shape) {\n  Circle { radius } => PI * radius ** 2,\n  Square { side } => side ** 2,\n};\n");
+  try_fmt("match lit/wildcard", "const r = match (l) {\n  'debug' => 0,\n  -1 => 1,\n  _ => 2,\n};\n");
+  try_fmt("match block arm", "const a = match (s) {\n  Circle { radius } => {\n    const r2 = radius * radius;\n    3.14 * r2\n  },\n  Square { side } => side ** 2,\n};\n");
+  try_fmt("if expr", "const a = if (b === 0) { 3 } else { 4 };\n");
+  try_fmt("if expr chain", "const g = if (b > 90) { \"A\" } else if (b > 80) { \"B\" } else { \"C\" };\n");
+  try_fmt("if expr multi", "const r = if (n > 0) {\n  const cached = expensive(n);\n  cached * 2\n} else {\n  0\n};\n");
+  try_fmt("newtype", "newtype AccountId = string;\n");
+  try_fmt("union", "union DeleteOutcome = 'soft' | 'hard' | 'unknown';\n");
+  try_fmt("impl", "impl Display for Shape {\n  fmt(self): string {\n    return \"x\";\n  }\n}\n");
+  try_fmt("impl multi/assoc", "impl From<string>, From<number> for Id {\n  from(value: string | number): Id {\n    return Id.Str(\"a\");\n  }\n}\n");
+  try_fmt("not", "const a = not ready;\nconst b = not not ready;\nconst e = not (items.length > 0);\n");
+  try_fmt("try", "function f(): Result<number, string> {\n  const once = divide(n, 2)?;\n  return Ok(once);\n}\n");
+  try_fmt("nonempty array", "declare const xs: number[+];\n");
+  try_fmt("constrict", "constrict A == B;\nconstrict C != D;\nconstrict E extends F;\n");
 }

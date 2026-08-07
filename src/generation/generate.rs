@@ -346,42 +346,26 @@ fn gen_node_with_inner_gen<'a>(node: Node<'a>, context: &mut Context<'a>, inner_
       Node::TsTypeQuery(node) => gen_type_query(node, context),
       Node::TsTypeRef(node) => gen_type_reference(node, context),
       Node::TsUnionType(node) => gen_union_type(node, context),
-      /* zts — print rules land here (ZesTTY Phase 7 item 7) */
-      //
-      // These are the AST nodes the swc fork adds for the zts language. The
-      // parser produces them and dprint-swc-ext now has view nodes for them, so
-      // this dispatch is the last place that does not know about them, and it is
-      // exactly where the print rules go — one `gen_*` per node, donor-node
-      // discipline, mirroring the arms above.
-      //
-      // Until then, formatting a file that actually contains zts syntax fails
-      // loudly on purpose. Falling through to "print the raw text" (what the arm
-      // below does for nodes that should never be matched) would emit a
-      // half-formatted file and look like it worked.
-      //
-      // The arms are listed EXPLICITLY rather than as a `_ =>` wildcard so that
-      // adding a node to the zts grammar is a compile error here instead of a
-      // runtime surprise — the same reason every arm above is spelled out.
-      Node::MatchArm(_)
-      | Node::MatchExpr(_)
-      | Node::MatchLitPat(_)
-      | Node::MatchVariantPat(_)
-      | Node::MatchWildcardPat(_)
-      | Node::ZtsEnumDecl(_)
-      | Node::ZtsEnumField(_)
-      | Node::ZtsEnumVariant(_)
-      | Node::ZtsExprBlock(_)
-      | Node::ZtsIfExpr(_)
-      | Node::ZtsImplDecl(_)
-      | Node::ZtsImplMethod(_)
-      | Node::ZtsImplTraitRef(_)
-      | Node::ZtsNewtypeDecl(_)
-      | Node::ZtsNonEmptyArrayType(_)
-      | Node::ZtsNotExpr(_)
-      | Node::ZtsTryExpr(_)
-      | Node::ZtsUnionDecl(_) => {
-        panic!("zts-fmt: no print rule for {} yet (ZesTTY Phase 7 item 7).", node.kind());
-      }
+      /* zts */
+      Node::MatchArm(node) => gen_match_arm(node, context),
+      Node::MatchExpr(node) => gen_match_expr(node, context),
+      Node::MatchLitPat(node) => gen_match_lit_pat(node, context),
+      Node::MatchVariantPat(node) => gen_match_variant_pat(node, context),
+      Node::MatchWildcardPat(node) => gen_match_wildcard_pat(node, context),
+      Node::ZtsConstrictDecl(node) => gen_zts_constrict_decl(node, context),
+      Node::ZtsEnumDecl(node) => gen_zts_enum_decl(node, context),
+      Node::ZtsEnumField(node) => gen_zts_enum_field(node, context),
+      Node::ZtsEnumVariant(node) => gen_zts_enum_variant(node, context),
+      Node::ZtsExprBlock(node) => gen_zts_expr_block(node, context),
+      Node::ZtsIfExpr(node) => gen_zts_if_expr(node, context),
+      Node::ZtsImplDecl(node) => gen_zts_impl_decl(node, context),
+      Node::ZtsImplMethod(node) => gen_zts_impl_method(node, context),
+      Node::ZtsImplTraitRef(node) => gen_zts_impl_trait_ref(node, context),
+      Node::ZtsNewtypeDecl(node) => gen_zts_newtype_decl(node, context),
+      Node::ZtsNonEmptyArrayType(node) => gen_zts_non_empty_array_type(node, context),
+      Node::ZtsNotExpr(node) => gen_zts_not_expr(node, context),
+      Node::ZtsTryExpr(node) => gen_zts_try_expr(node, context),
+      Node::ZtsUnionDecl(node) => gen_zts_union_decl(node, context),
       /* These should never be matched. Return its text if so */
       Node::Class(_) | Node::Function(_) | Node::Invalid(_) | Node::WithStmt(_) | Node::TsModuleBlock(_) => {
         if cfg!(debug_assertions) {
@@ -6648,6 +6632,503 @@ fn gen_union_or_intersection_type<'a, 'b>(node: UnionOrIntersectionType<'a, 'b>,
       Node::TsTypeAssertion(_) => true,
       Node::TsParenthesizedType(paren_type) => !should_skip_parenthesized_type(paren_type, context),
       _ => false,
+    }
+  }
+}
+
+/* zts */
+
+// Print rules for the constructs the zts language adds (ZesTTY Phase 7 item 7).
+//
+// Every rule here is built from the donor rule for the vanilla-TS construct it
+// most resembles, so that layout decisions — brace position, blank-line
+// preservation, comment attachment, hanging indents — stay identical to the
+// rest of the formatter instead of being reinvented per node.
+//
+// Two rules are NOT configurable, deliberately:
+//
+// * the `{` of a `match` always shares a line with the `)` of its discriminant.
+//   That is not a style preference — it is the ASI guard the language depends
+//   on. `match (x)` followed by a newline and a `{` is a call expression
+//   followed by a block in vanilla TS, and moving the brace down would silently
+//   turn a match into two statements.
+// * the same holds for the `{` of an expression `if`.
+//
+// Everything else routes through an existing config option, named at its use.
+
+fn gen_zts_enum_decl<'a>(node: &ZtsEnumDecl<'a>, context: &mut Context<'a>) -> PrintItems {
+  // Donor: gen_enum_decl. A zts `enum` is a TS enum declaration as far as
+  // layout goes — a named header plus a braced, comma-separated member list —
+  // so it reads the same three config options and gets the same behaviour.
+  let start_header_lsil = LineStartIndentLevel::new("startHeader");
+  let mut items = PrintItems::new();
+
+  items.push_info(start_header_lsil);
+  items.push_sc(sc!("enum "));
+  items.extend(gen_node(node.ident.into(), context));
+
+  let member_spacing = context.config.enum_declaration_member_spacing;
+  items.extend(gen_membered_body(
+    GenMemberedBodyOptions {
+      node: node.into(),
+      members: node.variants.iter().map(|&x| x.into()).collect(),
+      start_header_lsil: Some(start_header_lsil),
+      brace_position: context.config.enum_declaration_brace_position,
+      should_use_blank_line: move |previous, next, context| match member_spacing {
+        MemberSpacing::BlankLine => true,
+        MemberSpacing::NewLine => false,
+        MemberSpacing::Maintain => node_helpers::has_separating_blank_line(&previous, &next, context.program),
+      },
+      separator: context.config.enum_declaration_trailing_commas.into(),
+    },
+    context,
+  ));
+
+  items
+}
+
+fn gen_zts_enum_variant<'a>(node: &ZtsEnumVariant<'a>, context: &mut Context<'a>) -> PrintItems {
+  // Donor: gen_object_like_node, the same helper that lays out an object
+  // literal or an interface body. The payload braces are mandatory in the
+  // grammar even when empty (`Inactive {}`), so they are always printed.
+  let mut items = PrintItems::new();
+  items.extend(gen_node(node.name.into(), context));
+  items.push_space();
+  items.extend(gen_object_like_node(
+    GenObjectLikeNodeOptions {
+      node: node.into(),
+      members: node.fields.iter().map(|&x| x.into()).collect(),
+      separator: context.config.enum_declaration_trailing_commas.into(),
+      prefer_hanging: false,
+      prefer_single_line: context.config.object_expression_prefer_single_line,
+      force_single_line: false,
+      force_multi_line: false,
+      surround_single_line_with_spaces: true,
+      allow_blank_lines: false,
+      node_sorter: None,
+    },
+    context,
+  ));
+  items
+}
+
+fn gen_zts_enum_field<'a>(node: &ZtsEnumField<'a>, context: &mut Context<'a>) -> PrintItems {
+  // `mut` opts the field out of `readonly` in the lowered type. It is a
+  // modifier on the field, printed like `readonly` is on a class property.
+  let mut items = PrintItems::new();
+  if node.is_mut() {
+    items.push_sc(sc!("mut "));
+  }
+  items.extend(gen_node(node.name.into(), context));
+  items.extend(gen_type_ann_with_colon_for_type(node.type_ann, context));
+  items
+}
+
+fn gen_zts_newtype_decl<'a>(node: &ZtsNewtypeDecl<'a>, context: &mut Context<'a>) -> PrintItems {
+  // Donor: gen_type_alias. Same shape — keyword, name, `=`, a type, semicolon —
+  // so it inherits the assignment rule that decides whether a long right-hand
+  // side breaks after the `=` or hangs.
+  let mut items = PrintItems::new();
+  items.push_sc(sc!("newtype "));
+  items.extend(gen_node(node.ident.into(), context));
+  items.extend(gen_assignment(node.type_ann.into(), sc!("="), context));
+  if context.config.semi_colons.is_true() {
+    items.push_sc(sc!(";"));
+  }
+  items
+}
+
+fn gen_zts_union_decl<'a>(node: &ZtsUnionDecl<'a>, context: &mut Context<'a>) -> PrintItems {
+  // Donor: gen_type_alias for the header, gen_union_or_intersection_type for
+  // the member list.
+  //
+  // The members are string-literal nodes rather than a `TsUnionType`, so that
+  // generator cannot be called directly; the separated-values call below is a
+  // transcription of it, keeping the leading-`|`-when-multi-line behaviour and
+  // the same config option, so a long vocabulary wraps exactly like a
+  // hand-written literal union does.
+  let mut items = PrintItems::new();
+  items.push_sc(sc!("union "));
+  items.extend(gen_node(node.ident.into(), context));
+  items.push_sc(sc!(" ="));
+  // The members are not one node, so gen_assignment cannot be used to place the
+  // value after the `=`; this is the part of it that applies — a space that
+  // disappears when the value starts on the next line.
+  items.push_signal(Signal::SpaceIfNotTrailing);
+
+  let members: Vec<Node<'a>> = node.members.iter().map(|&x| x.into()).collect();
+  let force_use_new_lines = get_use_new_lines_for_nodes(&members, context.config.union_and_intersection_type_prefer_single_line, context);
+  let prefer_hanging = context.config.union_and_intersection_type_prefer_hanging;
+  let indent_width = context.config.indent_width;
+  let separator = sc!("|");
+
+  let gen_result = ir_helpers::gen_separated_values(
+    |is_multi_line_or_hanging_ref| {
+      let is_multi_line_or_hanging = is_multi_line_or_hanging_ref.create_resolver();
+      let member_count = members.len();
+      let mut generated_nodes = Vec::new();
+      for (i, member) in members.into_iter().enumerate() {
+        let is_last_value = i + 1 == member_count;
+        let separator_token = context.token_finder.get_previous_token_if_operator(&member.range(), separator.text);
+        let start_lc = LineAndColumn::new("start");
+        let after_separator_ln = LineNumber::new("afterSeparator");
+        let mut items = PrintItems::new();
+        items.push_line_and_column(start_lc);
+        if let Some(separator_token) = separator_token {
+          items.extend(gen_leading_comments(&separator_token.range(), context));
+        }
+        if i == 0 {
+          items.push_condition(if_true("separatorIfMultiLine", is_multi_line_or_hanging.clone(), {
+            let mut items = PrintItems::new();
+            items.push_sc(separator);
+            items
+          }));
+        } else {
+          items.push_sc(separator);
+        }
+
+        if let Some(separator_token) = separator_token {
+          items.extend(gen_trailing_comments(&separator_token.range(), context));
+        }
+        items.push_info(after_separator_ln);
+
+        items.push_condition(if_true(
+          "afterSeparatorSpace",
+          Rc::new(move |condition_context| {
+            let is_on_same_line = condition_helpers::is_on_same_line(condition_context, after_separator_ln)?;
+            let is_at_same_position = condition_helpers::is_at_same_position(condition_context, start_lc)?;
+            Some(is_on_same_line && !is_at_same_position)
+          }),
+          Signal::SpaceIfNotTrailing.into(),
+        ));
+        items.extend(gen_node(member, context));
+
+        generated_nodes.push(ir_helpers::GeneratedValue {
+          items,
+          lines_span: None,
+          allow_inline_multi_line: false,
+          allow_inline_single_line: is_last_value,
+        });
+      }
+
+      generated_nodes
+    },
+    ir_helpers::GenSeparatedValuesOptions {
+      prefer_hanging,
+      force_use_new_lines,
+      allow_blank_lines: false,
+      indent_width,
+      single_line_options: ir_helpers::SingleLineOptions::separated_same_line(Signal::SpaceOrNewLine.into()),
+      multi_line_options: ir_helpers::MultiLineOptions::new_line_start(),
+      force_possible_newline_at_start: false,
+    },
+  );
+  items.extend(conditions::indent_if_start_of_line(gen_result.items).into());
+
+  if context.config.semi_colons.is_true() {
+    items.push_sc(sc!(";"));
+  }
+  items
+}
+
+fn gen_zts_impl_decl<'a>(node: &ZtsImplDecl<'a>, context: &mut Context<'a>) -> PrintItems {
+  // Donor: gen_class_decl — a header naming types, then a braced member list of
+  // methods — so it reads the class config for brace position and member
+  // spacing and its methods go through the same generator class methods do.
+  let start_header_lsil = LineStartIndentLevel::new("startHeader");
+  let mut items = PrintItems::new();
+
+  items.push_info(start_header_lsil);
+  items.push_sc(sc!("impl "));
+
+  // Traits v2: a comma-separated header, each entry an ident with optional type
+  // arguments (`impl From<string>, From<number> for Id`). Each listed trait is
+  // its own conformance obligation, so the list is printed as written — never
+  // reordered, never collapsed into one instantiation.
+  for (i, trait_ref) in node.traits.iter().enumerate() {
+    if i > 0 {
+      items.push_sc(sc!(", "));
+    }
+    items.extend(gen_node((*trait_ref).into(), context));
+  }
+
+  items.push_sc(sc!(" for "));
+  items.extend(gen_node(node.for_ident.into(), context));
+
+  items.extend(gen_membered_body(
+    GenMemberedBodyOptions {
+      node: node.into(),
+      members: node.methods.iter().map(|&x| x.into()).collect(),
+      start_header_lsil: Some(start_header_lsil),
+      brace_position: context.config.class_declaration_brace_position,
+      should_use_blank_line: |previous, next, context| node_helpers::has_separating_blank_line(&previous, &next, context.program),
+      separator: Separator::none(),
+    },
+    context,
+  ));
+
+  items
+}
+
+fn gen_zts_impl_trait_ref<'a>(node: &ZtsImplTraitRef<'a>, context: &mut Context<'a>) -> PrintItems {
+  let mut items = PrintItems::new();
+  items.extend(gen_node(node.ident.into(), context));
+  if let Some(type_args) = node.type_args {
+    items.extend(gen_node(type_args.into(), context));
+  }
+  items
+}
+
+fn gen_zts_impl_method<'a>(node: &ZtsImplMethod<'a>, context: &mut Context<'a>) -> PrintItems {
+  // Donor: gen_class_or_object_method, the shared generator behind class
+  // methods, object methods and accessors. An impl member is exactly a method:
+  // name, parameters, return type, body.
+  //
+  // The `self` receiver needs no special handling — it is an ordinary first
+  // parameter in the AST, unannotated, and printing parameters as written puts
+  // it back as written. An associated function simply has no such parameter.
+  let func = node.function;
+  gen_class_or_object_method(
+    ClassOrObjectMethod {
+      node: node.into(),
+      parameters_range: func.get_parameters_range(context),
+      decorators: None,
+      accessibility: None,
+      is_static: false,
+      is_async: func.is_async(),
+      is_abstract: false,
+      is_override: false,
+      kind: ClassOrObjectMethodKind::Method,
+      is_generator: func.is_generator(),
+      is_optional: false,
+      key: node.name.into(),
+      type_params: func.type_params.map(|x| x.into()),
+      params: func.params.iter().map(|&x| x.into()).collect(),
+      return_type: func.return_type.map(|x| x.into()),
+      body: func.body.map(|x| x.into()),
+    },
+    context,
+  )
+}
+
+fn gen_match_expr<'a>(node: &MatchExpr<'a>, context: &mut Context<'a>) -> PrintItems {
+  // Donor: gen_switch_stmt — a discriminant in parens followed by a braced list
+  // of arms is structurally a switch, and gen_membered_body gives the arms the
+  // same comment handling and blank-line preservation the cases get.
+  let start_header_lsil = LineStartIndentLevel::new("startHeader");
+  let mut items = PrintItems::new();
+  items.push_info(start_header_lsil);
+  items.push_sc(sc!("match "));
+  items.extend(gen_node_in_parens(
+    |context| gen_node(node.discriminant.into(), context),
+    GenNodeInParensOptions {
+      inner_range: node.discriminant.range(),
+      prefer_hanging: context.config.switch_statement_prefer_hanging,
+      allow_open_paren_trailing_comments: false,
+      single_line_space_around: context.config.switch_statement_space_around,
+    },
+    context,
+  ));
+  items.extend(gen_membered_body(
+    GenMemberedBodyOptions {
+      node: node.into(),
+      members: node.arms.iter().map(|&x| x.into()).collect(),
+      start_header_lsil: Some(start_header_lsil),
+      // NOT configurable, and not a style choice: `match (x)` followed by a
+      // newline and a `{` is a call expression followed by a block in vanilla
+      // TS. Moving this brace to the next line would silently reinterpret the
+      // program. See the ASI guards in the language spec.
+      brace_position: BracePosition::SameLine,
+      should_use_blank_line: |previous, next, context| node_helpers::has_separating_blank_line(&previous, &next, context.program),
+      // Fixed rather than configurable in v1: the arm list is the language's
+      // own punctuation, and every zts source in the wild uses a trailing comma
+      // on the multi-line form.
+      separator: TrailingCommas::OnlyMultiLine.into(),
+    },
+    context,
+  ));
+  items
+}
+
+fn gen_match_arm<'a>(node: &MatchArm<'a>, context: &mut Context<'a>) -> PrintItems {
+  let mut items = PrintItems::new();
+  items.extend(gen_node(node.pattern.into(), context));
+  // Donor: gen_assignment, the same rule that lays out the right-hand side of
+  // `=`. It emits the space, the operator and then the value, so a long arm
+  // body breaks and indents the way a long initializer does rather than running
+  // off the line.
+  items.extend(gen_assignment_op_to(node.body.into(), "=>", sc!("=>"), context));
+  items
+}
+
+fn gen_match_variant_pat<'a>(node: &MatchVariantPat<'a>, context: &mut Context<'a>) -> PrintItems {
+  // `Circle { radius }` — the binding is an ordinary object pattern, so it is
+  // generated by the object-pattern rule and picks up destructuring layout,
+  // renames (`{ radius: r }`) and defaults for free. A variant arm that binds
+  // nothing has no pattern at all and prints as the bare name.
+  let mut items = PrintItems::new();
+  items.extend(gen_node(node.name.into(), context));
+  if let Some(binding) = node.binding {
+    items.push_space();
+    items.extend(gen_node(binding.into(), context));
+  }
+  items
+}
+
+fn gen_match_lit_pat<'a>(node: &MatchLitPat<'a>, context: &mut Context<'a>) -> PrintItems {
+  // `-1 => …`. The minus belongs to the pattern, not to the literal, so it is
+  // printed here — the literal node itself has no sign.
+  let mut items = PrintItems::new();
+  if node.neg() {
+    items.push_sc(sc!("-"));
+  }
+  items.extend(gen_node(node.lit.into(), context));
+  items
+}
+
+fn gen_match_wildcard_pat<'a>(_: &MatchWildcardPat<'a>, _: &mut Context<'a>) -> PrintItems {
+  let mut items = PrintItems::new();
+  items.push_sc(sc!("_"));
+  items
+}
+
+fn gen_zts_if_expr<'a>(node: &ZtsIfExpr<'a>, context: &mut Context<'a>) -> PrintItems {
+  // Donor: gen_if_stmt. An expression `if` has a statement `if`'s syntax — the
+  // superset promise depends on that — so it is laid out the same way, with the
+  // consequent and alternate being expression blocks instead of block
+  // statements. The `else` placement follows the same config.
+  let mut items = PrintItems::new();
+  items.push_sc(sc!("if "));
+  items.extend(gen_node_in_parens(
+    |context| gen_node(node.test.into(), context),
+    GenNodeInParensOptions {
+      inner_range: node.test.range(),
+      prefer_hanging: context.config.if_statement_prefer_hanging,
+      allow_open_paren_trailing_comments: true,
+      single_line_space_around: context.config.if_statement_space_around,
+    },
+    context,
+  ));
+  // Same ASI reasoning as `match`: the `{` shares the line with the `)`.
+  items.push_space();
+  items.extend(gen_node(node.cons.into(), context));
+
+  // `else` is mandatory on an expression `if` — an else-less one is a compile
+  // error — so there is no "no alternate" branch to handle here.
+  items.push_sc(sc!(" else "));
+  match node.alt {
+    ZtsIfAlt::Block(block) => items.extend(gen_node(block.into(), context)),
+    ZtsIfAlt::If(if_expr) => items.extend(gen_node(if_expr.into(), context)),
+  }
+
+  items
+}
+
+fn gen_zts_expr_block<'a>(node: &ZtsExprBlock<'a>, context: &mut Context<'a>) -> PrintItems {
+  // Donor: gen_object_like_node rather than gen_block.
+  //
+  // gen_block always breaks after `{` when it has children, which would turn
+  // the canonical `if (b === 0) { 3 } else { 4 }` into five lines. The
+  // object-literal helper is the one that keeps a short braced body on one line
+  // with spaces inside and expands it when the source did or when it no longer
+  // fits — which is exactly the behaviour an expression block wants.
+  //
+  // Statements already print their own terminator, and the tail deliberately
+  // has none, so the members separate themselves and the helper is given no
+  // separator.
+  let mut members: Vec<Node<'a>> = node.stmts.iter().map(|x| x.into()).collect();
+  members.push(node.tail.into());
+
+  gen_object_like_node(
+    GenObjectLikeNodeOptions {
+      node: node.into(),
+      members,
+      separator: Separator::none(),
+      prefer_hanging: false,
+      prefer_single_line: false,
+      force_single_line: false,
+      // A block that carries statements is a multi-statement body; collapsing
+      // it onto one line would put a `;` and a tail expression side by side and
+      // read as a sequence rather than as a body with a result.
+      force_multi_line: !node.stmts.is_empty(),
+      surround_single_line_with_spaces: true,
+      allow_blank_lines: true,
+      node_sorter: None,
+    },
+    context,
+  )
+}
+
+fn gen_zts_try_expr<'a>(node: &ZtsTryExpr<'a>, context: &mut Context<'a>) -> PrintItems {
+  // Postfix `?`. Donor: gen_update_expr's suffix form — operand, then operator,
+  // no space.
+  let mut items = PrintItems::new();
+  items.extend(gen_node(node.expr.into(), context));
+  items.push_sc(sc!("?"));
+  items
+}
+
+fn gen_zts_not_expr<'a>(node: &ZtsNotExpr<'a>, context: &mut Context<'a>) -> PrintItems {
+  // Donor: gen_unary_expr. `not` is `!` with a keyword spelling and the same
+  // precedence, so it takes the same shape — operator then operand — and the
+  // same parenthesisation rule for the one context where a unary operand needs
+  // protecting.
+  //
+  // Because `not` is a word, the space after it is not optional the way `!`'s
+  // absence is: `notready` is an identifier.
+  let mut items = PrintItems::new();
+  items.push_sc(sc!("not "));
+  items.extend(gen_node(node.arg.into(), context));
+
+  if let Node::BinExpr(parent) = node.parent() {
+    if matches!(parent.op(), BinaryOp::In | BinaryOp::InstanceOf) {
+      items = surround_with_parens(items);
+    }
+  }
+
+  items
+}
+
+fn gen_zts_non_empty_array_type<'a>(node: &ZtsNonEmptyArrayType<'a>, context: &mut Context<'a>) -> PrintItems {
+  // Donor: gen_array_type, with the language's own suffix.
+  let mut items = PrintItems::new();
+  items.extend(gen_node(node.elem_type.into(), context));
+  items.push_sc(sc!("[+]"));
+  items
+}
+
+fn gen_zts_constrict_decl<'a>(node: &ZtsConstrictDecl<'a>, context: &mut Context<'a>) -> PrintItems {
+  // `constrict A == B;` — an erased type-level assertion. Donor: gen_type_alias.
+  // The statement is a keyword, two types and an operator between them, so the
+  // right-hand type goes through the same assignment rule a type alias's does
+  // and a long claim breaks and indents the same way.
+  let mut items = PrintItems::new();
+  items.push_sc(sc!("constrict "));
+  items.extend(gen_node(node.left.into(), context));
+  items.extend(gen_assignment_op_to(
+    node.right.into(),
+    operator_text(node.op()),
+    operator_sc(node.op()),
+    context,
+  ));
+  if context.config.semi_colons.is_true() {
+    items.push_sc(sc!(";"));
+  }
+  return items;
+
+  fn operator_text(op: ZtsConstrictOp) -> &'static str {
+    match op {
+      ZtsConstrictOp::Eq => "==",
+      ZtsConstrictOp::NotEq => "!=",
+      ZtsConstrictOp::Extends => "extends",
+    }
+  }
+
+  fn operator_sc(op: ZtsConstrictOp) -> &'static StringContainer {
+    match op {
+      ZtsConstrictOp::Eq => sc!("=="),
+      ZtsConstrictOp::NotEq => sc!("!="),
+      ZtsConstrictOp::Extends => sc!("extends"),
     }
   }
 }
