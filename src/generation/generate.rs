@@ -367,6 +367,7 @@ fn gen_node_with_inner_gen<'a>(node: Node<'a>, context: &mut Context<'a>, inner_
       Node::ZtsNotExpr(node) => gen_zts_not_expr(node, context),
       Node::ZtsTryExpr(node) => gen_zts_try_expr(node, context),
       Node::ZtsUnionDecl(node) => gen_zts_union_decl(node, context),
+      Node::ZtsUnionMember(node) => gen_zts_union_member(node, context),
       /* These should never be matched. Return its text if so */
       Node::Class(_) | Node::Function(_) | Node::Invalid(_) | Node::WithStmt(_) | Node::TsModuleBlock(_) => {
         if cfg!(debug_assertions) {
@@ -6799,7 +6800,7 @@ fn gen_zts_union_decl<'a>(node: &ZtsUnionDecl<'a>, context: &mut Context<'a>) ->
   // Donor: gen_type_alias for the header, gen_union_or_intersection_type for
   // the member list.
   //
-  // The members are string-literal nodes rather than a `TsUnionType`, so that
+  // The members are ZtsUnionMember nodes rather than a `TsUnionType`, so that
   // generator cannot be called directly; the separated-values call below is a
   // transcription of it, keeping the leading-`|`-when-multi-line behaviour and
   // the same config option, so a long vocabulary wraps exactly like a
@@ -7041,6 +7042,19 @@ fn gen_match_variant_pat<'a>(node: &MatchVariantPat<'a>, context: &mut Context<'
 fn gen_match_lit_pat<'a>(node: &MatchLitPat<'a>, context: &mut Context<'a>) -> PrintItems {
   // `-1 => …`. The minus belongs to the pattern, not to the literal, so it is
   // printed here — the literal node itself has no sign.
+  let mut items = PrintItems::new();
+  if node.neg() {
+    items.push_sc(sc!("-"));
+  }
+  items.extend(gen_node(node.lit.into(), context));
+  items
+}
+
+fn gen_zts_union_member<'a>(node: &ZtsUnionMember<'a>, context: &mut Context<'a>) -> PrintItems {
+  // `'info'`, `200`, `-1`. Donor: gen_match_lit_pat — a union member has the
+  // same shape as a literal arm pattern, sign included, and for the same
+  // reason: the minus belongs to the member, not to the literal, so the
+  // literal node's own text does not carry it.
   let mut items = PrintItems::new();
   if node.neg() {
     items.push_sc(sc!("-"));
