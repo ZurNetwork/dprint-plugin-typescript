@@ -350,6 +350,7 @@ fn gen_node_with_inner_gen<'a>(node: Node<'a>, context: &mut Context<'a>, inner_
       Node::MatchArm(node) => gen_match_arm(node, context),
       Node::MatchExpr(node) => gen_match_expr(node, context),
       Node::MatchLitPat(node) => gen_match_lit_pat(node, context),
+      Node::MatchRangePat(node) => gen_match_range_pat(node, context),
       Node::MatchVariantPat(node) => gen_match_variant_pat(node, context),
       Node::MatchWildcardPat(node) => gen_match_wildcard_pat(node, context),
       Node::ZtsConstrictDecl(node) => gen_zts_constrict_decl(node, context),
@@ -7045,6 +7046,29 @@ fn gen_match_lit_pat<'a>(node: &MatchLitPat<'a>, context: &mut Context<'a>) -> P
     items.push_sc(sc!("-"));
   }
   items.extend(gen_node(node.lit.into(), context));
+  items
+}
+
+fn gen_match_range_pat<'a>(node: &MatchRangePat<'a>, context: &mut Context<'a>) -> PrintItems {
+  // `400..=499 => …`. Donor: gen_match_lit_pat, one bound at a time — the
+  // signs belong to the pattern, not to the literals, so they are printed
+  // here just as the negative literal pattern's is.
+  //
+  // No spaces around `..=`: it binds two bounds into one token-like unit,
+  // the way a numeric separator does, and the source form `400 ..= 499`
+  // (which the lexer also accepts) normalises to the tight one. It never
+  // breaks — a range is two number literals, so it cannot outgrow a line
+  // on its own.
+  let mut items = PrintItems::new();
+  if node.lo_neg() {
+    items.push_sc(sc!("-"));
+  }
+  items.extend(gen_node(node.lo.into(), context));
+  items.push_sc(sc!("..="));
+  if node.hi_neg() {
+    items.push_sc(sc!("-"));
+  }
+  items.extend(gen_node(node.hi.into(), context));
   items
 }
 
